@@ -133,19 +133,14 @@ public:
 
 class Reader {
 private:
-    // Copia y pega de las variables utilizadas en main() para las pruebas de ejecución de la clase memoryManagement
-    int memSize;
-    int currentAllocationAlgorithm;
-    std::vector<std::string> sizeDistribution;
+    std::vector<std::string> inputFileVector;
 
 public:
     Reader() {
-        memSize = 0;
-        currentAllocationAlgorithm = 0; // 1 = First, 2 = Best, 3 = Worst
-        sizeDistribution = {};
+        inputFileVector = {};
     }
 
-    // Para la línea en la que se especifican la distribución de segmentos de memoria
+    // Para líneas en la que se especifican varios datos separados por comas y espacios
     std::vector<std::string> splitString(std::string distributedSizes){
         std::stringstream sstr(distributedSizes);
         std::vector<std::string> v;
@@ -158,7 +153,7 @@ public:
         return v;
     }
 
-    // Función principal
+    // Lee el archivo de entrada, almacena la info importantes en un vector, y guarda este vector en privado
     void executeFileReading(){
         std::ifstream inputFile;
         inputFile.open("malloc-input.txt");
@@ -167,12 +162,12 @@ public:
             return;
         }
 
-        std::ofstream outputFile;
+        /*std::ofstream outputFile;
         outputFile.open("malloc-output.txt");
         if (!outputFile.is_open()) {
             std::cerr << "No se pudo abrir el archivo de entrada." << std::endl;
             return;
-        }
+        }*/
 
         std::vector<std::string> inputFileContent;
         std::string line;
@@ -184,19 +179,62 @@ public:
 
             inputFileContent.push_back(line);
         }
-
-        for (int i = 0; i < inputFileContent.size(); i++){
+        
+        /*for (int i = 0; i < inputFileContent.size(); i++){
             std::cout << inputFileContent[i] << std::endl;
-        }
-
+        }*/
+    
         inputFile.close();
-        outputFile.close();
+        // outputFile.close();
+        inputFileVector = inputFileContent;
         return;
     }
 
+    void executeAllocation(){
+        int sizeOfMem = std::stoi(inputFileVector[0]);
+        int numOfSegments = std::stoi(inputFileVector[1]);
+        std::vector<int> segments = {};
+        std::vector<std::string> thirdLine = this->splitString(inputFileVector[2]);
+        for (int i = 0; i < thirdLine.size(); i++){
+            segments.push_back = std::stoi(thirdLine[i]);
+        }
+        int algorithmType = std::stoi(inputFileVector[3]); // 1 = FirstFit, 2 = BestFit, 3 = WorstFit
+
+        MemoryManagement manager(sizeOfMem);
+        manager.customMemSize(numOfSegments);
+        manager.distributeMemSize(segments);
+        std::vector<std::string> consequentLines = {};
+        int jobID;
+        int jobMem;
+        for (int j = 4; j < inputFileVector.size(); j++ ){
+            consequentLines = this->splitString(inputFileVector[j]);
+            jobID = std::stoi(consequentLines[0]);
+            jobMem = std::stoi(consequentLines[1]);
+            if (algorithmType == 1) {
+                if (manager.memAllocFirstFit(jobID, jobMem)) {
+                    std::cout << "Proceso alojado en memoria exitosamente." << std::endl;
+                } else {
+                    std::cout << "El alojamiento del proceso en memoria falló." << std::endl;
+                }
+            } else if (algorithmType == 2) {
+                if (manager.memAllocBestFit(jobID, jobMem)) {
+                    std::cout << "Proceso alojado en memoria exitosamente." << std::endl;
+                } else {
+                    std::cout << "El alojamiento del proceso en memoria falló." << std::endl;
+                }
+            } else if (algorithmType == 3) {
+                if (manager.memAllocWorstFit(jobID, jobMem)) {
+                    std::cout << "Proceso alojado en memoria exitosamente." << std::endl;
+                } else {
+                    std::cout << "El alojamiento del proceso en memoria falló." << std::endl;
+                }
+            }
+        }
+        return 0;
+    }
 };
 
-int main() {
+void testingMemoryManagementClass() {
     int memSize = 100;
     std::vector<int> testing = {10, 50, 20, 20};
     MemoryManagement manager(memSize);
@@ -204,8 +242,9 @@ int main() {
     manager.customMemSize(4);
     manager.distributeMemSize(testing);
     
-    if (manager.memAllocFirstFit(1, 20)) {
-        std::cout << "Asignado proceso 1 de size 20" << std::endl;
+    // Debería asignarse al primer segmento de memoria
+    if (manager.memAllocFirstFit(1, 10)) {
+        std::cout << "Asignado proceso 1 de size 10 usando First Fit" << std::endl;
     } else {
         std::cout << "No se pudo asignar memoria para el proceso 1" << std::endl;
     }
@@ -216,5 +255,68 @@ int main() {
     std::cout << "Proceso 1 liberado" << std::endl;
     
     manager.memoryStatus();
+
+    // Debería asignarse al tercer segmento de memoria
+    if (manager.memAllocBestFit(2, 20)) {
+        std::cout << "Asignado proceso 2 de size 20 usando Best Fit" << std::endl;
+    } else {
+        std::cout << "No se pudo asignar memoria para el proceso 2" << std::endl;
+    }
+
+    // Debería asignarse al segundo segmento de memoria
+    if (manager.memAllocWorstFit(3, 15)) {
+        std::cout << "Asignado proceso 2 de size 15 usando Worst Fit" << std::endl;
+    } else {
+        std::cout << "No se pudo asignar memoria para el proceso 3" << std::endl;
+    }
+
+    manager.memoryStatus();
+
+    manager.freeMem(2);
+    std::cout << "Proceso 2 liberado" << std::endl;
+
+    // No debería asignarse a algun segmento de memoria
+    if (manager.memAllocFirstFit(4, 25)) {
+        std::cout << "Asignado proceso 4 de size 25 usando Worst Fit" << std::endl;
+    } else {
+        std::cout << "No se pudo asignar memoria para el proceso 4" << std::endl;
+    }
+
+    // Debería asignarse al primer segmento de memoria
+    if (manager.memAllocFirstFit(5, 5)) {
+        std::cout << "Asignado proceso 5 de size 5 usando First Fit" << std::endl;
+    } else {
+        std::cout << "No se pudo asignar memoria para el proceso 3" << std::endl;
+    }
+    return;
+
+    manager.memoryStatus();
+
+    manager.freeMem(3);
+    std::cout << "Proceso 3 liberado" << std::endl;
+
+    manager.freeMem(5);
+    std::cout << "Proceso 5 liberado" << std::endl;
+}
+
+void testingReaderClass() {
+    Reader r;
+    r.executeFileReading();
+    r.executeAllocation();
+    return;
+}
+
+int main() {
+    int option;
+    std::cout << "Opcion (1): Correr una función para probar la clase memoryManagement" << std::endl;
+    std::cout << "Opcion (2): Hacer lectura desde un archivo de entrada y recibir la salida por pantalla" << std::endl;
+    std::cin >> option;
+
+    if (option == 1){
+        testingMemoryManagementClass();
+    } else if (option == 2){
+        testingReaderClass();
+    }
+
     return 0;
 }
