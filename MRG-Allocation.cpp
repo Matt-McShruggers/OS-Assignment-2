@@ -162,13 +162,6 @@ public:
             return;
         }
 
-        /*std::ofstream outputFile;
-        outputFile.open("malloc-output.txt");
-        if (!outputFile.is_open()) {
-            std::cerr << "No se pudo abrir el archivo de entrada." << std::endl;
-            return;
-        }*/
-
         std::vector<std::string> inputFileContent;
         std::string line;
         int currentLine = 0;
@@ -179,10 +172,6 @@ public:
 
             inputFileContent.push_back(line);
         }
-        
-        /*for (int i = 0; i < inputFileContent.size(); i++){
-            std::cout << inputFileContent[i] << std::endl;
-        }*/
     
         inputFile.close();
         // outputFile.close();
@@ -196,7 +185,8 @@ public:
         std::vector<int> segments = {};
         std::vector<std::string> thirdLine = this->splitString(inputFileVector[2]);
         for (int i = 0; i < thirdLine.size(); i++){
-            segments.push_back = std::stoi(thirdLine[i]);
+            int ssgg = std::stoi(thirdLine[i]);
+            segments.push_back(ssgg);
         }
         int algorithmType = std::stoi(inputFileVector[3]); // 1 = FirstFit, 2 = BestFit, 3 = WorstFit
 
@@ -208,6 +198,7 @@ public:
         int jobMem;
         for (int j = 4; j < inputFileVector.size(); j++ ){
             consequentLines = this->splitString(inputFileVector[j]);
+            consequentLines[0].erase(0, 1);
             jobID = std::stoi(consequentLines[0]);
             jobMem = std::stoi(consequentLines[1]);
             if (algorithmType == 1) {
@@ -230,7 +221,7 @@ public:
                 }
             }
         }
-        return 0;
+        return;
     }
 };
 
